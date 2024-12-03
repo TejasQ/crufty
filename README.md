@@ -4,6 +4,8 @@
 
 A command-line tool to check for files that exceed specified line count thresholds in your codebase. Perfect for maintaining code quality and identifying potentially complex files that might need refactoring.
 
+![crufty in action](./demo.gif)
+
 ## Installation
 
 ```bash
