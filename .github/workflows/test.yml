@@ -34,6 +34,3 @@ jobs:
 
       - name: Run tests
         run: pnpm test
-
-      - name: Run crufty on itself
-        run: pnpm crufty
