@@ -2,6 +2,7 @@
 import ignore, { Ignore } from "ignore";
 import path from "path";
 import chalk from "chalk";
+import fg from "fast-glob";
 
 interface FileSystem {
   stat: typeof import("fs/promises").stat;
@@ -65,16 +66,20 @@ export async function checkFileLengths(
 
     for (const filePath of filePaths) {
       try {
-        const stats = await fs.stat(filePath);
-
-        if (stats.isDirectory()) {
-          const files = await fs.readdir(filePath);
-          const fullPaths = files.map((file) =>
-            path.join(filePath, file.toString())
-          );
-          allFiles.push(...fullPaths);
-        } else if (stats.isFile()) {
-          allFiles.push(filePath);
+        const globResults = await fg(filePath, { dot: true });
+        if (globResults.length > 0) {
+          allFiles.push(...globResults);
+        } else {
+          const stats = await fs.stat(filePath);
+          if (stats.isDirectory()) {
+            const files = await fs.readdir(filePath);
+            const fullPaths = files.map((file) =>
+              path.join(filePath, file.toString())
+            );
+            allFiles.push(...fullPaths);
+          } else if (stats.isFile()) {
+            allFiles.push(filePath);
+          }
         }
       } catch (err) {
         if (!silent && throwOnFound) {
