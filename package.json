@@ -18,9 +18,10 @@
     "code-analysis",
     "developer-tools"
   ],
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
   "bin": {
-    "crufty": "./dist/index.js"
+    "crufty": "./dist/index.cjs"
   },
   "files": [
     "dist",
@@ -34,11 +35,13 @@
     "clean": "rimraf dist coverage",
     "prebuild": "npm run clean",
     "build:types": "tsc",
-    "build:bundle": "esbuild index.ts --bundle --platform=node --outfile=dist/index.js",
-    "build": "run-s build:*",
+    "build:bundle:cjs": "esbuild index.ts --bundle --platform=node --outfile=dist/index.cjs",
+    "build:bundle:esm": "esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/index.mjs",
+    "build": "run-s build:types build:bundle:cjs build:bundle:esm",
     "dev": "run-p watch:*",
     "watch:types": "tsc --watch",
-    "watch:bundle": "esbuild index.ts --bundle --platform=node --outfile=dist/index.js --watch",
+    "watch:bundle:cjs": "esbuild index.ts --bundle --platform=node --outfile=dist/index.cjs --watch",
+    "watch:bundle:esm": "esbuild index.ts --bundle --platform=node --format=esm --outfile=dist/index.mjs --watch",
     "test": "vitest run",
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
@@ -53,6 +56,7 @@
     "ignore": "^6.0.2"
   },
   "devDependencies": {
+    "@types/node": "^22.10.1",
     "@vitest/coverage-v8": "2.1.6",
     "esbuild": "^0.20.1",
     "npm-run-all": "^4.1.5",
