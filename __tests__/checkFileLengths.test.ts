@@ -229,4 +229,88 @@ describe("checkFileLengths", () => {
     expect(result).toHaveLength(1);
     expect(consoleSpy).not.toHaveBeenCalled();
   });
+
+  it("should handle empty filePaths array", async () => {
+    const result = await checkFileLengths({ stat, readdir, readFile }, [], {
+      silent: true,
+    });
+
+    expect(result).toHaveLength(0);
+  });
+
+  it("should handle non-file entries when silent is false", async () => {
+    stat.mockResolvedValue({
+      isDirectory: () => false,
+      isFile: () => false, // Neither file nor directory
+    });
+
+    const result = await checkFileLengths(
+      { stat, readdir, readFile },
+      ["not-a-file"],
+      { silent: false }
+    );
+
+    expect(result).toHaveLength(0);
+  });
+
+  it("should handle non-file entries when silent is true", async () => {
+    stat.mockResolvedValue({
+      isDirectory: () => false,
+      isFile: () => false, // Neither file nor directory
+    });
+
+    const result = await checkFileLengths(
+      { stat, readdir, readFile },
+      ["not-a-file"],
+      { silent: true }
+    );
+
+    expect(result).toHaveLength(0);
+  });
+
+  it("should log error when accessing path fails and not silent", async () => {
+    stat.mockRejectedValue(new Error("Access error"));
+    const consoleSpy = vi.spyOn(console, "error");
+
+    await checkFileLengths({ stat, readdir, readFile }, ["test.js"], {
+      throwOnFound: false,
+    });
+
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Error accessing path: test.js",
+      expect.any(Error)
+    );
+  });
+
+  it("should skip non-file entries during processing", async () => {
+    stat.mockResolvedValue({
+      isDirectory: () => false,
+      isFile: () => false,
+    });
+    const readFileSpy = vi.spyOn({ readFile }, "readFile");
+
+    await checkFileLengths({ stat, readdir, readFile }, ["test.js"], {
+      throwOnFound: false,
+      useGitignore: false,
+    });
+
+    expect(readFileSpy).not.toHaveBeenCalled();
+  });
+
+  it("should handle top-level errors and log when not silent", async () => {
+    stat.mockRejectedValue(new Error("Critical error"));
+    const consoleSpy = vi.spyOn(console, "error");
+
+    const result = await checkFileLengths(
+      { stat, readdir, readFile },
+      ["test.js"],
+      { throwOnFound: false }
+    );
+
+    expect(result).toEqual([]);
+    expect(consoleSpy).toHaveBeenCalledWith(
+      "Error accessing path: test.js",
+      expect.any(Error)
+    );
+  });
 });
